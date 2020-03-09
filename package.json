@@ -31,5 +31,8 @@
   ],
   "directories": {
     "test": "tests"
+  },
+  "dependencies": {
+    "@janiscommerce/model": "^3.6.1"
   }
 }
