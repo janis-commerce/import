@@ -66,7 +66,7 @@ describe('API getUploadData', () => {
 
 		ApiTest(ApiGetUploadData, '/api/getUploadData', [
 			{
-				description: 'Should return 400 if the entity model is not found in the corresponding data path',
+				description: 'Should return 400 if the entity controller is not found in the corresponding data path',
 				request: {
 					data: { entity: 'some-entity', fileName: 'some-file-name.xls' }
 				},
@@ -92,7 +92,7 @@ describe('API getUploadData', () => {
 
 		ApiTest(ApiGetUploadData, '/api/getUploadData', [
 			{
-				description: 'Should return 400 if the entity controller is not found in the corresponding data path',
+				description: 'Should return 400 if the entity model is not found in the corresponding data path',
 				request: {
 					data: { entity: 'some-entity', fileName: 'some-file-name.xls' }
 				},
