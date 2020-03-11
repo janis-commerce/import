@@ -35,6 +35,7 @@
   "dependencies": {
     "@janiscommerce/api": "^4.2.2",
     "@janiscommerce/api-test": "^2.1.2",
+    "@janiscommerce/event-emitter": "^2.0.2",
     "@janiscommerce/model": "^3.6.1",
     "@janiscommerce/s3": "^1.2.1",
     "mime": "^2.4.4",

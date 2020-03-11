@@ -18,7 +18,7 @@ const modelImportPath = path.join(process.cwd(), process.env.MS_PATH || '', 'mod
 describe('API getUploadData', () => {
 
 	context('When validating type and missing field  ', () => {
-		ApiTest(ApiGetUploadData, '/api/getUploadData', [
+		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the required field \'entity\' is not passed',
 				before: () => {
@@ -31,8 +31,19 @@ describe('API getUploadData', () => {
 				response: {
 					code: 400
 				}
-			},
-			{
+			}, {
+				description: 'Should return 400 if the required field \'entity\' is not a string',
+				before: () => {
+					process.env.BUCKET = 'some-bucket-beta';
+				},
+				request: {
+					data: { entity: 123, fileName: 'some-file-name.xls' }
+				},
+				session: true,
+				response: {
+					code: 400
+				}
+			}, {
 				description: 'Should return 400 if the required field \'filename\' is not passed',
 				before: () => {
 					process.env.BUCKET = 'some-bucket-beta';
@@ -44,8 +55,19 @@ describe('API getUploadData', () => {
 				response: {
 					code: 400
 				}
-			},
-			{
+			}, {
+				description: 'Should return 400 if the required field \'filename\' is not a string',
+				before: () => {
+					process.env.BUCKET = 'some-bucket-beta';
+				},
+				request: {
+					data: { entity: 'fakeEntity', fileName: 123, fileSource: 'a-file-source' }
+				},
+				session: true,
+				response: {
+					code: 400
+				}
+			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a valid',
 				before: () => {
 					process.env.BUCKET = 'some-bucket-beta';
@@ -63,7 +85,7 @@ describe('API getUploadData', () => {
 
 	context('When entity controller does not exist  ', () => {
 
-		ApiTest(ApiGetUploadData, '/api/getUploadData', [
+		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the entity controller is not found in the corresponding data path',
 				before: () => {
@@ -88,7 +110,7 @@ describe('API getUploadData', () => {
 
 	context('When entity model does not exist  ', () => {
 
-		ApiTest(ApiGetUploadData, '/api/getUploadData', [
+		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the entity model is not found in the corresponding data path',
 				before: () => {
@@ -113,7 +135,7 @@ describe('API getUploadData', () => {
 
 	context('When import model does not exist  ', () => {
 
-		ApiTest(ApiGetUploadData, '/api/getUploadData', [
+		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the entity import is not found in the corresponding data path',
 				before: () => {
@@ -150,7 +172,7 @@ describe('API getUploadData', () => {
 			mockRequire.stop(modelImportPath);
 		});
 
-		ApiTest(ApiGetUploadData, '/api/getUploadData', [{
+		ApiTest(ApiGetUploadData, '/api/import', [{
 			description: 'Should return 500 if S3 rejects',
 			request: { data: { fileName: 'test.csv', entity: 'some-entity' } },
 			session: true,
