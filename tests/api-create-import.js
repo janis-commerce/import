@@ -118,7 +118,7 @@ describe('API createImport', () => {
 	});
 
 
-	context('When processing  ', () => {
+	context('When processing ', () => {
 
 		const before = () => {
 			mockRequire(fakeModelPath, FakeModel);

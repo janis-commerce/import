@@ -15,199 +15,151 @@ const fakeControllerPath = path.join(process.cwd(), process.env.MS_PATH || '', '
 
 const modelImportPath = path.join(process.cwd(), process.env.MS_PATH || '', 'models', 'import');
 
+const importData = { entity: 'some-entity', fileName: 'some-file-name.xls' };
+
+const session = true;
+
+const before = () => {
+	process.env.BUCKET = 'some-bucket-beta';
+};
+
 describe('API getUploadData', () => {
 
-	context('When validating type and missing field  ', () => {
+	const response = { code: 400 };
+
+	context('When validating', () => {
 		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the required field \'entity\' is not passed',
-				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
-				},
-				request: {
-					data: { entity: undefined, fileName: 'some-file-name.xls' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				before,
+				request: { data: { entity: undefined, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'entity\' is not a string',
-				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
-				},
-				request: {
-					data: { entity: 123, fileName: 'some-file-name.xls' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				before,
+				request: { data: { entity: 123, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not passed',
-				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
-				},
-				request: {
-					data: { entity: 'fakeEntity', fileName: undefined }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				before,
+				request: { data: { fileName: undefined, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a string',
-				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
-				},
-				request: {
-					data: { entity: 'fakeEntity', fileName: 123, fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				before,
+				request: { data: { fileName: 123, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a valid',
-				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
-				},
-				request: {
-					data: { entity: 'fakeEntity', fileName: 'some-file-name.pdf' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When entity controller does not exist  ', () => {
-
-		ApiTest(ApiGetUploadData, '/api/import', [
-			{
+				before,
+				request: { data: { fileName: 'some-file-name.pdf', ...importData } },
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity controller is not found in the corresponding data path',
 				before: () => {
 					mockRequire(fakeModelPath, FakeModel);
 					mockRequire(modelImportPath, ModelImport);
-					process.env.BUCKET = 'some-bucket-beta';
+					before();
 				},
 				after: () => {
 					mockRequire.stop(fakeModelPath);
 					mockRequire.stop(modelImportPath);
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When entity model does not exist  ', () => {
-
-		ApiTest(ApiGetUploadData, '/api/import', [
-			{
+				request: { data: importData },
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity model is not found in the corresponding data path',
 				before: () => {
 					mockRequire(fakeControllerPath, FakeController);
 					mockRequire(modelImportPath, ModelImport);
-					process.env.BUCKET = 'some-bucket-beta';
+					before();
 				},
 				after: () => {
 					mockRequire.stop(fakeControllerPath);
 					mockRequire.stop(modelImportPath);
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When import model does not exist  ', () => {
-
-		ApiTest(ApiGetUploadData, '/api/import', [
-			{
+				request: { data: importData },
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity import is not found in the corresponding data path',
 				before: () => {
-					process.env.BUCKET = 'some-bucket-beta';
 					mockRequire(fakeModelPath, FakeModel);
 					mockRequire(fakeControllerPath, FakeController);
+					before();
 				},
 				after: () => {
 					mockRequire.stop(fakeModelPath);
 					mockRequire.stop(fakeControllerPath);
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls' }
+				request: { data: importData },
+				session,
+				response
+			}, {
+				description: 'Should return 400 if bucket is not defined',
+				request: { data: importData },
+				session,
+				before: () => {
+					delete (process.env.BUCKET);
+					mockRequire(fakeModelPath, FakeModel);
+					mockRequire(fakeControllerPath, FakeController);
+					mockRequire(modelImportPath, ModelImport);
 				},
-				session: true,
-				response: {
-					code: 400
-				}
+				after: () => {
+					mockRequire.stop(fakeModelPath);
+					mockRequire.stop(fakeControllerPath);
+					mockRequire.stop(modelImportPath);
+				},
+				response: { code: 400 }
 			}
 		]);
 	});
 
 	context('When processing', () => {
 
-		before(() => {
+		const beforeProcessing = () => {
 			mockRequire(fakeModelPath, FakeModel);
 			mockRequire(fakeControllerPath, FakeController);
 			mockRequire(modelImportPath, ModelImport);
-		});
+			process.env.BUCKET = 'some-bucket-beta';
+		};
 
-		after(() => {
+		const after = () => {
 			mockRequire.stop(fakeModelPath);
 			mockRequire.stop(fakeControllerPath);
 			mockRequire.stop(modelImportPath);
-		});
+		};
 
 		ApiTest(ApiGetUploadData, '/api/import', [{
 			description: 'Should return 500 if S3 rejects',
-			request: { data: { fileName: 'test.csv', entity: 'some-entity' } },
-			session: true,
+			request: { data: importData },
+			session,
 			before: sandbox => {
-				process.env.BUCKET = 'some-bucket-beta';
+				beforeProcessing();
 				sandbox.stub(S3, 'createPresignedPost').rejects(new Error('S3 internal error'));
 			},
 			after: (response, sandbox) => {
-
 				sandbox.assert.calledOnce(S3.createPresignedPost);
+				after();
 			},
 			response: { code: 500 }
 		}, {
-			description: 'Should return 400 if bucket is not defined',
-			request: { data: { fileName: 'test.csv', entity: 'some-entity' } },
-			session: true,
-			before: sandbox => {
-				delete (process.env.BUCKET);
-				sandbox.stub(S3, 'createPresignedPost').returns(true);
-			},
-			after: (response, sandbox) => {
-				process.env.BUCKET = 'some-bucket-beta';
-				sandbox.assert.notCalled(S3.createPresignedPost);
-			},
-			response: { code: 400 }
-		}, {
 			description: 'Should return 200 if everything is ok',
-			request: { data: { fileName: 'test.csv', entity: 'some-entity' } },
-			session: true,
+			request: { data: importData },
+			session,
 			before: sandbox => {
-				process.env.BUCKET = 'some-bucket-beta';
+				beforeProcessing();
 				sandbox.stub(S3, 'createPresignedPost').resolves({ url: 'URL', fields: {} });
 			},
 			after: (response, sandbox) => {
 				sandbox.assert.calledOnce(S3.createPresignedPost);
+				after();
 			},
 			response: { code: 200 }
 		}]);
