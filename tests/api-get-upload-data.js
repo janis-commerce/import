@@ -25,9 +25,10 @@ const before = () => {
 
 describe('API getUploadData', () => {
 
-	const response = { code: 400 };
-
 	context('When validating', () => {
+
+		const response = { code: 400 };
+
 		ApiTest(ApiGetUploadData, '/api/import', [
 			{
 				description: 'Should return 400 if the required field \'entity\' is not passed',
