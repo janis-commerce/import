@@ -15,81 +15,60 @@ const fakeControllerPath = path.join(process.cwd(), process.env.MS_PATH || '', '
 
 const modelImportPath = path.join(process.cwd(), process.env.MS_PATH || '', 'models', 'import');
 
+const importData = { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' };
+
+const session = true;
+
 describe('API createImport', () => {
 
-	context('When validating type and missing field  ', () => {
+	context('When validating', () => {
+
+		const response = { code: 400 };
+
+
 		ApiTest(ApiCreateImport, '/api/import', [
 			{
 				description: 'Should return 400 if the required field \'entity\' is not passed',
-				request: {
-					data: { entity: undefined, fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				request: { data: { entity: undefined, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'entity\' is not a string',
 				request: {
 					data: { entity: 123, fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
 				},
-				session: true,
-				response: {
-					code: 400
-				}
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not passed',
-				request: {
-					data: { entity: 'fakeEntity', fileName: undefined, fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				request: { data: { fileName: undefined, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a string',
-				request: {
-					data: { entity: 'fakeEntity', fileName: 123, fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				request: { data: { fileName: 123, ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a valid',
-				request: {
-					data: { entity: 'fakeEntity', fileName: 'some-file-name.pdf', fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 400
-				}
+				request: { data: { fileName: 'some-file-name.pdf', ...importData } },
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'fileSource\' is not passed',
 				request: {
-					data: { entity: 'fakeEntity', fileName: 'some-file-name.xls', fileSource: undefined }
+					data: { fileSource: undefined, ...importData }
 				},
-				session: true,
-				response: {
-					code: 400
-				}
+				session,
+				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a string',
 				request: {
-					data: { entity: 'fakeEntity', fileName: 'some-file-name.xls', fileSource: 123 }
+					data: { fileSource: 123, ...importData }
 				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When entity controller does not exist  ', () => {
-
-		ApiTest(ApiCreateImport, '/api/import', [
-			{
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity controller is not found in the corresponding data path',
 				before: () => {
 					mockRequire(fakeModelPath, FakeModel);
@@ -100,20 +79,11 @@ describe('API createImport', () => {
 					mockRequire.stop(modelImportPath);
 				},
 				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
+					data: importData
 				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When entity model does not exist  ', () => {
-
-		ApiTest(ApiCreateImport, '/api/import', [
-			{
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity model is not found in the corresponding data path',
 				before: () => {
 					mockRequire(fakeControllerPath, FakeController);
@@ -126,18 +96,9 @@ describe('API createImport', () => {
 				request: {
 					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
 				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
-	});
-
-	context('When import model does not exist  ', () => {
-
-		ApiTest(ApiCreateImport, '/api/import', [
-			{
+				session,
+				response
+			}, {
 				description: 'Should return 400 if the entity import is not found in the corresponding data path',
 				before: () => {
 					mockRequire(fakeModelPath, FakeModel);
@@ -150,116 +111,94 @@ describe('API createImport', () => {
 				request: {
 					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
 				},
-				session: true,
-				response: {
-					code: 400
-				}
-			}
-		]);
+				session,
+				response
+			}]
+		);
 	});
 
+
 	context('When processing  ', () => {
+
+		const before = () => {
+			mockRequire(fakeModelPath, FakeModel);
+			mockRequire(fakeControllerPath, FakeController);
+			mockRequire(modelImportPath, ModelImport);
+		};
+
+		const after = () => {
+			mockRequire.stop(fakeModelPath);
+			mockRequire.stop(fakeControllerPath);
+			mockRequire.stop(modelImportPath);
+		};
+
+		const importToSave = {
+			entity: importData.entity,
+			fileName: importData.fileSource,
+			originalName: importData.fileName,
+			status: ModelImport.statuses.active
+		};
+
+		const importToSaveId = '5e0a0619bcc3ce0007a18011';
+
+		const eventToEmit = {
+			entity: 'import',
+			event: 'created',
+			id: importToSaveId,
+			client: 'defaultClient'
+		};
 
 		ApiTest(ApiCreateImport, '/api/import', [
 			{
 				description: 'Should return 500 if the entity import fails. Should not emit event',
 				before: sandbox => {
-					mockRequire(fakeModelPath, FakeModel);
-					mockRequire(fakeControllerPath, FakeController);
-					mockRequire(modelImportPath, ModelImport);
+					before();
 					sandbox.stub(ModelImport.prototype, 'save').rejects(Error('DB ERROR'));
 					sandbox.stub(EventEmitter, 'emit').returns(true);
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnce(ModelImport.prototype.save);
-					sandbox.assert.calledWithExactly(ModelImport.prototype.save, {
-						entity: 'some-entity',
-						fileName: 'a-file-source',
-						originalName: 'some-file-name.xls',
-						status: ModelImport.statuses.active
-					});
+					sandbox.assert.calledWithExactly(ModelImport.prototype.save, importToSave);
 					sandbox.assert.notCalled(EventEmitter.emit);
-					mockRequire.stop(fakeModelPath);
-					mockRequire.stop(fakeControllerPath);
-					mockRequire.stop(modelImportPath);
+					after();
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 500
-				}
+				request: { data: importData },
+				session,
+				response: { code: 500 }
 			}, {
 				description: 'Should return 500 if event emitter fails',
 				before: sandbox => {
-					mockRequire(fakeModelPath, FakeModel);
-					mockRequire(fakeControllerPath, FakeController);
-					mockRequire(modelImportPath, ModelImport);
-					sandbox.stub(ModelImport.prototype, 'save').returns('5e0a0619bcc3ce0007a18011');
+					before();
+					sandbox.stub(ModelImport.prototype, 'save').returns(importToSaveId);
 					sandbox.stub(EventEmitter, 'emit').rejects(Error('EVENT EMITTER FAILS'));
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnce(ModelImport.prototype.save);
-					sandbox.assert.calledWithExactly(ModelImport.prototype.save, {
-						entity: 'some-entity',
-						fileName: 'a-file-source',
-						originalName: 'some-file-name.xls',
-						status: ModelImport.statuses.active
-					});
+					sandbox.assert.calledWithExactly(ModelImport.prototype.save, importToSave);
 					sandbox.assert.calledOnce(EventEmitter.emit);
-					sandbox.assert.calledWithExactly(EventEmitter.emit, {
-						entity: 'import',
-						event: 'created',
-						id: '5e0a0619bcc3ce0007a18011',
-						client: 'defaultClient'
-					});
-					mockRequire.stop(fakeModelPath);
-					mockRequire.stop(fakeControllerPath);
-					mockRequire.stop(modelImportPath);
+					sandbox.assert.calledWithExactly(EventEmitter.emit, eventToEmit);
+					after();
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 500
-				}
+				request: { data: importData },
+				session,
+				response: { code: 500 }
 			}, {
 				description: 'Should return 200 if everything is ok',
 				before: sandbox => {
-					mockRequire(fakeModelPath, FakeModel);
-					mockRequire(fakeControllerPath, FakeController);
-					mockRequire(modelImportPath, ModelImport);
-					sandbox.stub(ModelImport.prototype, 'save').returns('5e0a0619bcc3ce0007a18011');
+					before();
+					sandbox.stub(ModelImport.prototype, 'save').returns(importToSaveId);
 					sandbox.stub(EventEmitter, 'emit').returns(true);
 				},
 				after: (response, sandbox) => {
 					sandbox.assert.calledOnce(ModelImport.prototype.save);
-					sandbox.assert.calledWithExactly(ModelImport.prototype.save, {
-						entity: 'some-entity',
-						fileName: 'a-file-source',
-						originalName: 'some-file-name.xls',
-						status: ModelImport.statuses.active
-					});
+					sandbox.assert.calledWithExactly(ModelImport.prototype.save, importToSave);
 					sandbox.assert.calledOnce(EventEmitter.emit);
-					sandbox.assert.calledWithExactly(EventEmitter.emit, {
-						entity: 'import',
-						event: 'created',
-						id: '5e0a0619bcc3ce0007a18011',
-						client: 'defaultClient'
-					});
-					mockRequire.stop(fakeModelPath);
-					mockRequire.stop(fakeControllerPath);
-					mockRequire.stop(modelImportPath);
+					sandbox.assert.calledWithExactly(EventEmitter.emit, eventToEmit);
+					after();
 				},
-				request: {
-					data: { entity: 'some-entity', fileName: 'some-file-name.xls', fileSource: 'a-file-source' }
-				},
-				session: true,
-				response: {
-					code: 200
-				}
+				request: { data: importData },
+				session,
+				response: { code: 200 }
 			}
 		]);
 	});
