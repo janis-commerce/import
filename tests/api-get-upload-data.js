@@ -33,31 +33,31 @@ describe('API getUploadData', () => {
 			{
 				description: 'Should return 400 if the required field \'entity\' is not passed',
 				before,
-				request: { data: { entity: undefined, ...importData } },
+				request: { data: { ...importData, entity: undefined } },
 				session,
 				response
 			}, {
 				description: 'Should return 400 if the required field \'entity\' is not a string',
 				before,
-				request: { data: { entity: 123, ...importData } },
+				request: { data: { ...importData, entity: 123 } },
 				session,
 				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not passed',
 				before,
-				request: { data: { fileName: undefined, ...importData } },
+				request: { data: { ...importData, fileName: undefined } },
 				session,
 				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a string',
 				before,
-				request: { data: { fileName: 123, ...importData } },
+				request: { data: { ...importData, fileName: 123 } },
 				session,
 				response
 			}, {
 				description: 'Should return 400 if the required field \'filename\' is not a valid',
 				before,
-				request: { data: { fileName: 'some-file-name.pdf', ...importData } },
+				request: { data: { ...importData, fileName: 'some-file-name.pdf' } },
 				session,
 				response
 			}, {

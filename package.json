@@ -37,6 +37,7 @@
     "@janiscommerce/api-test": "^2.1.2",
     "@janiscommerce/event-emitter": "^2.0.2",
     "@janiscommerce/event-listener": "^1.1.1",
+    "@janiscommerce/event-listener-test": "^1.0.0",
     "@janiscommerce/model": "^3.6.1",
     "@janiscommerce/s3": "^1.2.1",
     "exceljs": "^3.8.1",
