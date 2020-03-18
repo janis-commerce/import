@@ -6,11 +6,13 @@ const { ServerlessHandler } = require('@janiscommerce/event-listener');
 const EventListenerTest = require('@janiscommerce/event-listener-test');
 const ImportGetObject = require('../lib/helpers/import-get-object');
 
-const { CreatedListener, ModelImport } = require('../lib/index');
+const { CreatedListener, Controller, ModelImport } = require('../lib/index');
 
 const handler = (...args) => ServerlessHandler.handle(CreatedListener, ...args);
 
-class FakeController {}
+class FakeModel {}
+const fakeModelPath = path.join(process.cwd(), process.env.MS_PATH || '', 'models', 'some-entity');
+
 const fakeControllerPath = path.join(process.cwd(), process.env.MS_PATH || '', 'controllers', 'import', 'some-entity');
 
 const modelImportPath = path.join(process.cwd(), process.env.MS_PATH || '', 'models', 'import');
@@ -50,11 +52,12 @@ describe('Created Import Listener', async () => {
 				event: { ...importEvent, id: undefined },
 				responseCode: 400
 			}, {
-				description: 'should return 400 when the event has no id',
+				description: 'should return 200',
 				session: true,
 				before: sandbox => {
 					mockRequire(modelImportPath, ModelImport);
-					mockRequire(fakeControllerPath, FakeController);
+					mockRequire(fakeModelPath, FakeModel);
+					mockRequire(fakeControllerPath, Controller);
 					sandbox.stub(ModelImport.prototype, 'getById').returns(importData);
 					process.env.BUCKET = 'some-bucket-beta';
 					sandbox.stub(ImportGetObject, 'call').returns(true);
@@ -62,6 +65,7 @@ describe('Created Import Listener', async () => {
 				event: importEvent,
 				after: sandbox => {
 					mockRequire.stop(modelImportPath);
+					mockRequire.stop(fakeModelPath);
 					mockRequire.stop(fakeControllerPath);
 					sandbox.assert.calledOnce(ModelImport.prototype.getById);
 					sandbox.assert.calledWithExactly(ModelImport.prototype.getById, importId);

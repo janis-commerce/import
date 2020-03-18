@@ -5,7 +5,7 @@ const { ModelImport } = require('../lib/index');
 
 describe('Models', () => {
 
-	describe('Export', () => {
+	describe('Import', () => {
 
 		describe('Getters', () => {
 
