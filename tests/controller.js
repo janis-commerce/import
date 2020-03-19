@@ -4,7 +4,7 @@ const assert = require('assert');
 const { Controller } = require('../lib/index');
 
 class Model {
-	save(array) {
+	multiSave(array) {
 		return array;
 	}
 }

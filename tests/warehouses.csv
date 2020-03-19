@@ -1,0 +1,4 @@
+name,referenceId,index,status
+warehouse-1,warehouse-1-ref-id,5e0a0619bcc3ce0007a18011,active
+warehouse-2,warehouse-2-ref-id,5e0a0619bcc3ce0007a18012,active
+warehouse-3,warehouse-3-ref-id,5e0a0619bcc3ce0007a18013,inactive

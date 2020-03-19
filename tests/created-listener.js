@@ -2,10 +2,10 @@
 
 const mockRequire = require('mock-require');
 const path = require('path');
+const fs = require('fs');
 const { ServerlessHandler } = require('@janiscommerce/event-listener');
 const EventListenerTest = require('@janiscommerce/event-listener-test');
-const ImportGetObject = require('../lib/helpers/import-get-object');
-
+const s3Wrapper = require('@janiscommerce/s3'); // REEMPLAZAR CUANDO SE PUBLIQUE STREAM
 const { CreatedListener, Controller, ModelImport } = require('../lib/index');
 
 const handler = (...args) => ServerlessHandler.handle(CreatedListener, ...args);
@@ -20,7 +20,7 @@ const modelImportPath = path.join(process.cwd(), process.env.MS_PATH || '', 'mod
 const importData = {
 	entity: 'some-entity',
 	fileName: 'a-file-source',
-	originalName: 'a-file-source.xlsx',
+	originalName: 'warehouses.csv',
 	status: ModelImport.statuses.active
 };
 
@@ -34,6 +34,38 @@ const importEvent = {
 	client: 'defaultClient'
 };
 
+const warehouses = [
+	{
+		name: 'warehouse-1',
+		referenceId: 'warehouse-1-ref-id',
+		index: '5e0a0619bcc3ce0007a18011',
+		status: 'active'
+	},
+	{
+		name: 'warehouse-2',
+		referenceId: 'warehouse-2-ref-id',
+		index: '5e0a0619bcc3ce0007a18012',
+		status: 'active'
+	},
+	{
+		name: 'warehouse-3',
+		referenceId: 'warehouse-3-ref-id',
+		index: '5e0a0619bcc3ce0007a18013',
+		status: 'inactive'
+	}
+];
+
+const generalBefore = () => {
+	mockRequire(modelImportPath, ModelImport);
+	mockRequire(fakeModelPath, FakeModel);
+	mockRequire(fakeControllerPath, Controller);
+};
+
+const generalAfter = () => {
+	mockRequire.stop(modelImportPath);
+	mockRequire.stop(fakeModelPath);
+	mockRequire.stop(fakeControllerPath);
+};
 
 describe('Created Import Listener', async () => {
 
@@ -55,25 +87,24 @@ describe('Created Import Listener', async () => {
 				description: 'should return 200',
 				session: true,
 				before: sandbox => {
-					mockRequire(modelImportPath, ModelImport);
-					mockRequire(fakeModelPath, FakeModel);
-					mockRequire(fakeControllerPath, Controller);
+					generalBefore();
 					sandbox.stub(ModelImport.prototype, 'getById').returns(importData);
 					process.env.BUCKET = 'some-bucket-beta';
-					sandbox.stub(ImportGetObject, 'call').returns(true);
+					const testStream = fs.createReadStream(path.join(__dirname, '/warehouses.csv'));
+					sandbox.stub(s3Wrapper, 'getObject').returns({ createReadStream: () => testStream });
+					sandbox.stub(Controller.prototype, 'save').returns(true);
 				},
 				event: importEvent,
 				after: sandbox => {
-					mockRequire.stop(modelImportPath);
-					mockRequire.stop(fakeModelPath);
-					mockRequire.stop(fakeControllerPath);
+					generalAfter();
 					sandbox.assert.calledOnce(ModelImport.prototype.getById);
 					sandbox.assert.calledWithExactly(ModelImport.prototype.getById, importId);
-					sandbox.assert.calledOnce(ImportGetObject.call);
-					sandbox.assert.calledWithExactly(ImportGetObject.call, {
+					sandbox.assert.calledOnce(s3Wrapper.getObject);
+					sandbox.assert.calledWithExactly(s3Wrapper.getObject, {
 						bucket: 'some-bucket-beta',
 						key: importData.fileName
 					});
+					sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
 				},
 				responseCode: 200
 			}
