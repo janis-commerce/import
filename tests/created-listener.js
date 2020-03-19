@@ -83,13 +83,14 @@ describe('Created Import Listener', async () => {
 				event: { ...importEvent, id: undefined },
 				responseCode: 400
 			}, {
-				description: 'should return 200 if it can read the file from s3',
+				description: 'should return 200 if it can read csv file from s3',
 				session: true,
 				before: sandbox => {
 					generalBefore();
 					sandbox.stub(ModelImport.prototype, 'getById').returns(importData);
 					process.env.BUCKET = 'some-bucket-beta';
 					const testStream = fs.createReadStream(path.join(__dirname, '/warehouses.csv'));
+					console.log(testStream);
 					sandbox.stub(s3Wrapper, 'getObject').returns({ createReadStream: () => testStream });
 					sandbox.stub(Controller.prototype, 'save').returns(true);
 				},
@@ -107,7 +108,35 @@ describe('Created Import Listener', async () => {
 					sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
 				},
 				responseCode: 200
-			}, {
+			},
+			// , {
+			// 	description: 'should return 200 if it can read xlsx file from s3',
+			// 	session: true,
+			// 	before: sandbox => {
+			// 		generalBefore();
+			// 		sandbox.stub(ModelImport.prototype, 'getById').returns({ ...importData, originalName: 'warehouses.xlsx' });
+			// 		process.env.BUCKET = 'some-bucket-beta';
+			// 		const testStream = fs.createReadStream(path.join(__dirname, '/warehouses.xlsx'));
+			// 		console.log(testStream);
+			// 		sandbox.stub(s3Wrapper, 'getObject').returns({ createReadStream: () => testStream });
+			// 		sandbox.stub(Controller.prototype, 'save').returns(true);
+			// 	},
+			// 	event: importEvent,
+			// 	after: sandbox => {
+			// 		generalAfter();
+			// 		sandbox.assert.calledOnce(ModelImport.prototype.getById);
+			// 		sandbox.assert.calledWithExactly(ModelImport.prototype.getById, importId);
+			// 		sandbox.assert.calledOnce(s3Wrapper.getObject);
+			// 		sandbox.assert.calledWithExactly(s3Wrapper.getObject, {
+			// 			bucket: 'some-bucket-beta',
+			// 			key: importData.fileName
+			// 		});
+			// 		sandbox.assert.calledOnce(Controller.prototype.save);
+			// 		sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
+			// 	},
+			// 	responseCode: 200
+			// }
+			{
 				description: 'should return 500 if the controller can not save the entities',
 				session: true,
 				before: sandbox => {
