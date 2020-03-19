@@ -72,7 +72,6 @@ describe('Created Import Listener', async () => {
 	context('When validating event', async () => {
 
 		await EventListenerTest(handler, [
-
 			{
 				description: 'should return 400 when the event has no client',
 				session: true,
@@ -84,7 +83,7 @@ describe('Created Import Listener', async () => {
 				event: { ...importEvent, id: undefined },
 				responseCode: 400
 			}, {
-				description: 'should return 200',
+				description: 'should return 200 if it can read the file from s3',
 				session: true,
 				before: sandbox => {
 					generalBefore();
@@ -104,9 +103,53 @@ describe('Created Import Listener', async () => {
 						bucket: 'some-bucket-beta',
 						key: importData.fileName
 					});
+					sandbox.assert.calledOnce(Controller.prototype.save);
 					sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
 				},
 				responseCode: 200
+			}, {
+				description: 'should return 500 if the controller can not save the entities',
+				session: true,
+				before: sandbox => {
+					generalBefore();
+					sandbox.stub(ModelImport.prototype, 'getById').returns(importData);
+					process.env.BUCKET = 'some-bucket-beta';
+					const testStream = fs.createReadStream(path.join(__dirname, '/warehouses.csv'));
+					sandbox.stub(s3Wrapper, 'getObject').returns({ createReadStream: () => testStream });
+					sandbox.stub(Controller.prototype, 'save').rejects(Error('DB ERROR'));
+				},
+				event: importEvent,
+				after: sandbox => {
+					generalAfter();
+					sandbox.assert.calledOnce(ModelImport.prototype.getById);
+					sandbox.assert.calledWithExactly(ModelImport.prototype.getById, importId);
+					sandbox.assert.calledOnce(s3Wrapper.getObject);
+					sandbox.assert.calledWithExactly(s3Wrapper.getObject, {
+						bucket: 'some-bucket-beta',
+						key: importData.fileName
+					});
+					sandbox.assert.calledOnce(Controller.prototype.save);
+					sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
+				},
+				responseCode: 500
+			}, {
+				description: 'should return 500 if the import model can not get the import data',
+				session: true,
+				before: sandbox => {
+					generalBefore();
+					sandbox.stub(ModelImport.prototype, 'getById').rejects(Error('DB ERROR'));
+					sandbox.stub(s3Wrapper, 'getObject').returns(true);
+					sandbox.stub(Controller.prototype, 'save').returns(true);
+				},
+				event: importEvent,
+				after: sandbox => {
+					generalAfter();
+					sandbox.assert.calledOnce(ModelImport.prototype.getById);
+					sandbox.assert.calledWithExactly(ModelImport.prototype.getById, importId);
+					sandbox.assert.notCalled(s3Wrapper.getObject);
+					sandbox.assert.notCalled(Controller.prototype.save);
+				},
+				responseCode: 500
 			}
 		]);
 	});
