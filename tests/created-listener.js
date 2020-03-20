@@ -109,7 +109,7 @@ describe('Created Import Listener', async () => {
 				},
 				responseCode: 200
 			},
-			// , {
+			// {
 			// 	description: 'should return 200 if it can read xlsx file from s3',
 			// 	session: true,
 			// 	before: sandbox => {
@@ -135,7 +135,7 @@ describe('Created Import Listener', async () => {
 			// 		sandbox.assert.calledWithExactly(Controller.prototype.save, warehouses);
 			// 	},
 			// 	responseCode: 200
-			// }
+			// },
 			{
 				description: 'should return 500 if the controller can not save the entities',
 				session: true,
